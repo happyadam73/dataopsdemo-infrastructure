@@ -1,0 +1,801 @@
+{
+    "source": 2,
+    "revision": 5,
+    "description": null,
+    "createdOn": "2022-11-14T10:54:26.637Z",
+    "modifiedOn": "2022-12-01T15:28:10.530Z",
+    "isDeleted": false,
+    "variables": {
+        "ADFMSIDatabaseRoleName": {
+            "value": "db_owner"
+        },
+        "ADFMSIPrincipalObjectName": {
+            "value": "adf-$(ProjectAbbreviation)-$(Environment)-$(LocationCode)-$(ResourceSequence)"
+        },
+        "DatabaseName": {
+            "value": "sqldb-$(ProjectAbbreviation)-$(Environment)-$(LocationCode)-$(ResourceSequence)"
+        },
+        "ServerName": {
+            "value": "sqlsvr-$(ProjectAbbreviation)-$(Environment)-$(LocationCode)-$(ResourceSequence).database.windows.net"
+        },
+        "SqlToken": {
+            "value": null,
+            "isSecret": true
+        }
+    },
+    "variableGroups": [
+        1
+    ],
+    "environments": [
+        {
+            "id": 5,
+            "name": "Development",
+            "rank": 1,
+            "variables": {
+                "Environment": {
+                    "value": "dev"
+                }
+            },
+            "variableGroups": [],
+            "preDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 13
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 1
+                }
+            },
+            "deployStep": {
+                "id": 18
+            },
+            "postDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 19
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 2
+                }
+            },
+            "deployPhases": [
+                {
+                    "deploymentInput": {
+                        "parallelExecution": {
+                            "parallelExecutionType": 0
+                        },
+                        "agentSpecification": {
+                            "identifier": "windows-2019"
+                        },
+                        "skipArtifactsDownload": false,
+                        "artifactsDownloadInput": {
+                            "downloadInputs": []
+                        },
+                        "queueId": 9,
+                        "demands": [],
+                        "enableAccessToken": false,
+                        "timeoutInMinutes": 0,
+                        "jobCancelTimeoutInMinutes": 1,
+                        "condition": "succeeded()",
+                        "overrideInputs": {}
+                    },
+                    "rank": 1,
+                    "phaseType": 1,
+                    "name": "Deploy SQL Database",
+                    "refName": null,
+                    "workflowTasks": [
+                        {
+                            "environment": {},
+                            "taskId": "46e4be58-730b-4389-8a2f-ea10b3e5e815",
+                            "version": "1.*",
+                            "name": "Get Sql Access Token for CICD Principal",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "scriptLocation": "inlineScript",
+                                "scriptPath": "",
+                                "inlineScript": "@echo off\nFOR /F \"tokens=* USEBACKQ\" %%F IN (`az account get-access-token --resource=https://database.windows.net --query accessToken`) DO (\nSET var=%%F\n)\n@echo on\necho ##vso[task.setvariable variable=SqlToken;issecret=true;]%var%",
+                                "args": "",
+                                "addSpnToEnvironment": "false",
+                                "useGlobalConfig": "false",
+                                "cwd": "",
+                                "failOnStandardError": "false"
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "ce85a08b-a538-4d2b-8589-1d37a9ab970f",
+                            "version": "1.*",
+                            "name": "Deploy DACPAC with Sql Access Token",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "AuthenticationType": "connectionString",
+                                "ServerName": "$(ServerName)",
+                                "DatabaseName": "$(DatabaseName)",
+                                "SqlUsername": "$(LoginName)",
+                                "SqlPassword": "$(LoginPassword)",
+                                "aadSqlUsername": "",
+                                "aadSqlPassword": "",
+                                "ConnectionString": "Server=$(ServerName);Initial Catalog=$(DatabaseName);Encrypt=True;TrustServerCertificate=False;Connection Timeout=30",
+                                "TaskNameSelector": "DacpacTask",
+                                "DeploymentAction": "Publish",
+                                "DacpacFile": "$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main/ADFDEMO_DW.tests.dacpac",
+                                "BacpacFile": "",
+                                "SqlFile": "",
+                                "SqlInline": "",
+                                "PublishProfile": "$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main/ADFDEMO_DW.tests.publish.xml",
+                                "AdditionalArguments": "/AccessToken:$(SqlToken) /p:BlockOnPossibleDataLoss=true /p:DropObjectsNotInSource=false",
+                                "SqlAdditionalArguments": "",
+                                "InlineAdditionalArguments": "",
+                                "IpDetectionMethod": "AutoDetect",
+                                "StartIpAddress": "",
+                                "EndIpAddress": "",
+                                "DeleteFirewallRule": "true"
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "4.*",
+                            "name": "Assign Data Factory MSI Permissions To Database",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main/AssignSQLPermissionsUsingTokenAccess.ps1",
+                                "Inline": "# You can write your azure powershell scripts inline here. \n# You can also pass predefined and custom variables to this script using arguments",
+                                "ScriptArguments": "-sqlAccessToken $(SqlToken) -principalObjectName $(ADFMSIPrincipalObjectName) -databaseServer $(ServerName) -databaseName $(DatabaseName) -databaseRole $(ADFMSIDatabaseRoleName)",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "RestrictContextToCurrentTask": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "false",
+                                "workingDirectory": ""
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "4.*",
+                            "name": "Run tSQLt Tests",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main/RuntSQLtTests.ps1",
+                                "Inline": "",
+                                "ScriptArguments": "-serverName $(ServerName) -databaseName $(DatabaseName) -accessToken $(SqlToken) -outputFile \"$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main/Test-$(DatabaseName).xml\"",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "RestrictContextToCurrentTask": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "false",
+                                "workingDirectory": ""
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "0b0f01ed-7dde-43ff-9cbb-e48954daf9b1",
+                            "version": "2.*",
+                            "name": "Publish tSQLt Test Results",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "testRunner": "JUnit",
+                                "testResultsFiles": "**/TEST-*.xml",
+                                "searchFolder": "$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main",
+                                "mergeTestResults": "false",
+                                "failTaskOnFailedTests": "true",
+                                "testRunTitle": "",
+                                "platform": "",
+                                "configuration": "",
+                                "publishRunAttachments": "true"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "environmentOptions": {
+                "emailNotificationType": "OnlyOnFailure",
+                "emailRecipients": "release.environment.owner;release.creator",
+                "skipArtifactsDownload": false,
+                "timeoutInMinutes": 0,
+                "enableAccessToken": false,
+                "publishDeploymentStatus": true,
+                "badgeEnabled": true,
+                "autoLinkWorkItems": false,
+                "pullRequestDeploymentEnabled": false
+            },
+            "demands": [],
+            "conditions": [],
+            "executionPolicy": {
+                "concurrencyCount": 1,
+                "queueDepthCount": 0
+            },
+            "schedules": [],
+            "retentionPolicy": {
+                "daysToKeep": 30,
+                "releasesToKeep": 3,
+                "retainBuild": true
+            },
+            "processParameters": {},
+            "properties": {
+                "BoardsEnvironmentType": {
+                    "$type": "System.String",
+                    "$value": "unmapped"
+                },
+                "LinkBoardsWorkItems": {
+                    "$type": "System.String",
+                    "$value": "False"
+                }
+            },
+            "preDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "postDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "environmentTriggers": []
+        },
+        {
+            "id": 6,
+            "name": "Pre-Production",
+            "rank": 2,
+            "variables": {
+                "Environment": {
+                    "value": "pre"
+                }
+            },
+            "variableGroups": [],
+            "preDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 14
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 1
+                }
+            },
+            "deployStep": {
+                "id": 17
+            },
+            "postDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 20
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 2
+                }
+            },
+            "deployPhases": [
+                {
+                    "deploymentInput": {
+                        "parallelExecution": {
+                            "parallelExecutionType": 0
+                        },
+                        "agentSpecification": {
+                            "identifier": "windows-2019"
+                        },
+                        "skipArtifactsDownload": false,
+                        "artifactsDownloadInput": {
+                            "downloadInputs": []
+                        },
+                        "queueId": 9,
+                        "demands": [],
+                        "enableAccessToken": false,
+                        "timeoutInMinutes": 0,
+                        "jobCancelTimeoutInMinutes": 1,
+                        "condition": "succeeded()",
+                        "overrideInputs": {}
+                    },
+                    "rank": 1,
+                    "phaseType": 1,
+                    "name": "Deploy SQL Database",
+                    "refName": null,
+                    "workflowTasks": [
+                        {
+                            "environment": {},
+                            "taskId": "46e4be58-730b-4389-8a2f-ea10b3e5e815",
+                            "version": "1.*",
+                            "name": "Get Sql Access Token for CICD Principal",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "scriptLocation": "inlineScript",
+                                "scriptPath": "",
+                                "inlineScript": "@echo off\nFOR /F \"tokens=* USEBACKQ\" %%F IN (`az account get-access-token --resource=https://database.windows.net --query accessToken`) DO (\nSET var=%%F\n)\n@echo on\necho ##vso[task.setvariable variable=SqlToken;issecret=true;]%var%",
+                                "args": "",
+                                "addSpnToEnvironment": "false",
+                                "useGlobalConfig": "false",
+                                "cwd": "",
+                                "failOnStandardError": "false"
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "ce85a08b-a538-4d2b-8589-1d37a9ab970f",
+                            "version": "1.*",
+                            "name": "Deploy DACPAC with Sql Access Token",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "AuthenticationType": "connectionString",
+                                "ServerName": "$(ServerName)",
+                                "DatabaseName": "$(DatabaseName)",
+                                "SqlUsername": "$(LoginName)",
+                                "SqlPassword": "$(LoginPassword)",
+                                "aadSqlUsername": "",
+                                "aadSqlPassword": "",
+                                "ConnectionString": "Server=$(ServerName);Initial Catalog=$(DatabaseName);Encrypt=True;TrustServerCertificate=False;Connection Timeout=30",
+                                "TaskNameSelector": "DacpacTask",
+                                "DeploymentAction": "Publish",
+                                "DacpacFile": "$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main/ADFDEMO_DW.dacpac",
+                                "BacpacFile": "",
+                                "SqlFile": "",
+                                "SqlInline": "",
+                                "PublishProfile": "",
+                                "AdditionalArguments": "/AccessToken:$(SqlToken)",
+                                "SqlAdditionalArguments": "",
+                                "InlineAdditionalArguments": "",
+                                "IpDetectionMethod": "AutoDetect",
+                                "StartIpAddress": "",
+                                "EndIpAddress": "",
+                                "DeleteFirewallRule": "true"
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "4.*",
+                            "name": "Assign Data Factory MSI Permissions To Database",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main/AssignSQLPermissionsUsingTokenAccess.ps1",
+                                "Inline": "# You can write your azure powershell scripts inline here. \n# You can also pass predefined and custom variables to this script using arguments",
+                                "ScriptArguments": "-sqlAccessToken $(SqlToken) -principalObjectName $(ADFMSIPrincipalObjectName) -databaseServer $(ServerName) -databaseName $(DatabaseName) -databaseRole $(ADFMSIDatabaseRoleName)",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "RestrictContextToCurrentTask": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "false",
+                                "workingDirectory": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            "environmentOptions": {
+                "emailNotificationType": "OnlyOnFailure",
+                "emailRecipients": "release.environment.owner;release.creator",
+                "skipArtifactsDownload": false,
+                "timeoutInMinutes": 0,
+                "enableAccessToken": false,
+                "publishDeploymentStatus": true,
+                "badgeEnabled": true,
+                "autoLinkWorkItems": false,
+                "pullRequestDeploymentEnabled": false
+            },
+            "demands": [],
+            "conditions": [],
+            "executionPolicy": {
+                "concurrencyCount": 1,
+                "queueDepthCount": 0
+            },
+            "schedules": [],
+            "retentionPolicy": {
+                "daysToKeep": 30,
+                "releasesToKeep": 3,
+                "retainBuild": true
+            },
+            "processParameters": {},
+            "properties": {
+                "BoardsEnvironmentType": {
+                    "$type": "System.String",
+                    "$value": "unmapped"
+                },
+                "LinkBoardsWorkItems": {
+                    "$type": "System.String",
+                    "$value": "False"
+                }
+            },
+            "preDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "postDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "environmentTriggers": []
+        },
+        {
+            "id": 7,
+            "name": "Production",
+            "rank": 3,
+            "variables": {
+                "Environment": {
+                    "value": "prd"
+                }
+            },
+            "variableGroups": [],
+            "preDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 15
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 1
+                }
+            },
+            "deployStep": {
+                "id": 16
+            },
+            "postDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 21
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 2
+                }
+            },
+            "deployPhases": [
+                {
+                    "deploymentInput": {
+                        "parallelExecution": {
+                            "parallelExecutionType": 0
+                        },
+                        "agentSpecification": {
+                            "identifier": "windows-2019"
+                        },
+                        "skipArtifactsDownload": false,
+                        "artifactsDownloadInput": {
+                            "downloadInputs": []
+                        },
+                        "queueId": 9,
+                        "demands": [],
+                        "enableAccessToken": false,
+                        "timeoutInMinutes": 0,
+                        "jobCancelTimeoutInMinutes": 1,
+                        "condition": "succeeded()",
+                        "overrideInputs": {}
+                    },
+                    "rank": 1,
+                    "phaseType": 1,
+                    "name": "Deploy SQL Database",
+                    "refName": null,
+                    "workflowTasks": [
+                        {
+                            "environment": {},
+                            "taskId": "46e4be58-730b-4389-8a2f-ea10b3e5e815",
+                            "version": "1.*",
+                            "name": "Get Sql Access Token for CICD Principal",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "scriptLocation": "inlineScript",
+                                "scriptPath": "",
+                                "inlineScript": "@echo off\nFOR /F \"tokens=* USEBACKQ\" %%F IN (`az account get-access-token --resource=https://database.windows.net --query accessToken`) DO (\nSET var=%%F\n)\n@echo on\necho ##vso[task.setvariable variable=SqlToken;issecret=true;]%var%",
+                                "args": "",
+                                "addSpnToEnvironment": "false",
+                                "useGlobalConfig": "false",
+                                "cwd": "",
+                                "failOnStandardError": "false"
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "ce85a08b-a538-4d2b-8589-1d37a9ab970f",
+                            "version": "1.*",
+                            "name": "Deploy DACPAC with Sql Access Token",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "AuthenticationType": "connectionString",
+                                "ServerName": "$(ServerName)",
+                                "DatabaseName": "$(DatabaseName)",
+                                "SqlUsername": "$(LoginName)",
+                                "SqlPassword": "$(LoginPassword)",
+                                "aadSqlUsername": "",
+                                "aadSqlPassword": "",
+                                "ConnectionString": "Server=$(ServerName);Initial Catalog=$(DatabaseName);Encrypt=True;TrustServerCertificate=False;Connection Timeout=30",
+                                "TaskNameSelector": "DacpacTask",
+                                "DeploymentAction": "Publish",
+                                "DacpacFile": "$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main/ADFDEMO_DW.dacpac",
+                                "BacpacFile": "",
+                                "SqlFile": "",
+                                "SqlInline": "",
+                                "PublishProfile": "",
+                                "AdditionalArguments": "/AccessToken:$(SqlToken)",
+                                "SqlAdditionalArguments": "",
+                                "InlineAdditionalArguments": "",
+                                "IpDetectionMethod": "AutoDetect",
+                                "StartIpAddress": "",
+                                "EndIpAddress": "",
+                                "DeleteFirewallRule": "true"
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "4.*",
+                            "name": "Assign Data Factory MSI Permissions To Database",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_sqlbuild/AzureSQLDacpac/main/AssignSQLPermissionsUsingTokenAccess.ps1",
+                                "Inline": "# You can write your azure powershell scripts inline here. \n# You can also pass predefined and custom variables to this script using arguments",
+                                "ScriptArguments": "-sqlAccessToken $(SqlToken) -principalObjectName $(ADFMSIPrincipalObjectName) -databaseServer $(ServerName) -databaseName $(DatabaseName) -databaseRole $(ADFMSIDatabaseRoleName)",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "RestrictContextToCurrentTask": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "false",
+                                "workingDirectory": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            "environmentOptions": {
+                "emailNotificationType": "OnlyOnFailure",
+                "emailRecipients": "release.environment.owner;release.creator",
+                "skipArtifactsDownload": false,
+                "timeoutInMinutes": 0,
+                "enableAccessToken": false,
+                "publishDeploymentStatus": true,
+                "badgeEnabled": true,
+                "autoLinkWorkItems": false,
+                "pullRequestDeploymentEnabled": false
+            },
+            "demands": [],
+            "conditions": [],
+            "executionPolicy": {
+                "concurrencyCount": 1,
+                "queueDepthCount": 0
+            },
+            "schedules": [],
+            "retentionPolicy": {
+                "daysToKeep": 30,
+                "releasesToKeep": 3,
+                "retainBuild": true
+            },
+            "processParameters": {},
+            "properties": {
+                "BoardsEnvironmentType": {
+                    "$type": "System.String",
+                    "$value": "production"
+                },
+                "LinkBoardsWorkItems": {
+                    "$type": "System.String",
+                    "$value": "False"
+                }
+            },
+            "preDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "postDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "environmentTriggers": []
+        }
+    ],
+    "artifacts": [
+        {
+            "sourceId": "4bec88ad-3b99-4413-9108-88fd7db2b9d1:3",
+            "type": "Build",
+            "alias": "_sqlbuild",
+            "definitionReference": {
+                "defaultVersionBranch": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionSpecific": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionTags": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionType": {
+                    "id": "latestType",
+                    "name": "Latest"
+                },
+                "definition": {
+                    "id": "3",
+                    "name": "SQL01-AzureSQLDatabase-Build"
+                },
+                "definitions": {
+                    "id": "",
+                    "name": ""
+                },
+                "IsMultiDefinitionType": {
+                    "id": "False",
+                    "name": "False"
+                },
+                "project": {
+                    "id": "4bec88ad-3b99-4413-9108-88fd7db2b9d1",
+                    "name": "DataOpsDemo"
+                },
+                "repository": {
+                    "id": "",
+                    "name": ""
+                }
+            },
+            "isPrimary": true,
+            "isRetained": false
+        }
+    ],
+    "triggers": [],
+    "releaseNameFormat": "$(Release.DefinitionName) (Release $(Rev:rrr), Build $(Build.BuildNumber))",
+    "tags": [],
+    "properties": {
+        "DefinitionCreationSource": {
+            "$type": "System.String",
+            "$value": "ReleaseImport"
+        },
+        "IntegrateBoardsWorkItems": {
+            "$type": "System.String",
+            "$value": "False"
+        },
+        "IntegrateJiraWorkItems": {
+            "$type": "System.String",
+            "$value": "false"
+        }
+    },
+    "id": 3,
+    "name": "SQL01-AzureSqlDatabase-Deploy",
+    "path": "\\02 - SQL",
+    "projectReference": null
+}

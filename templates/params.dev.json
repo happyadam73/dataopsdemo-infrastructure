@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "northeurope"
+    },
+    "locationCode": {
+      "value": "neur"
+    },    
+    "environment": {
+      "value": "dev"
+    },     
+    "project": {
+      "value": "xyz123"
+    },   
+    "resourceSequenceId": {
+      "value": 1
+    },       
+    "sqlAADAdminPrincipalType": {
+      "value": "Group"
+    },  
+    "sqlAADAdminPrincipalLogin": {
+      "value": "SQL Administrators"
+    },  
+    "sqlAADAdminPrincipalSID": {
+      "value": ""
+    },   
+    "repositoryType": {
+      "value": "AzureDevOps"
+    },
+    "projectName": {
+      "value": ""
+    }, 
+    "repositoryName": {
+      "value": ""
+    },
+    "accountName": {
+      "value": ""
+    },    
+    "collaborationBranch": {
+      "value": "main"
+    },
+    "rootFolder": {
+      "value": "/"
+    }, 
+    "tags": {
+      "value": {}
+    }
+  }
+}

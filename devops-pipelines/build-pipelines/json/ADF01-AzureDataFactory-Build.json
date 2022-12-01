@@ -1,0 +1,213 @@
+{
+    "options": [
+        {
+            "enabled": false,
+            "definition": {
+                "id": "5d58cc01-7c75-450c-be18-a388ddb129ec"
+            },
+            "inputs": {
+                "branchFilters": "[\"+refs/heads/*\"]",
+                "additionalFields": "{}"
+            }
+        },
+        {
+            "enabled": false,
+            "definition": {
+                "id": "a9db38f9-9fdc-478c-b0f9-464221e58316"
+            },
+            "inputs": {
+                "workItemType": "Issue",
+                "assignToRequestor": "true",
+                "additionalFields": "{}"
+            }
+        }
+    ],
+    "triggers": [
+        {
+            "branchFilters": [
+                "+refs/heads/adf_publish"
+            ],
+            "pathFilters": [],
+            "batchChanges": false,
+            "maxConcurrentBuildsPerBranch": 1,
+            "pollingInterval": 0,
+            "triggerType": 2
+        }
+    ],
+    "variables": {
+        "system.debug": {
+            "value": "false",
+            "allowOverride": true
+        }
+    },
+    "variableGroups": [
+        {
+            "variables": {
+                "DevelopmentEnvironment": {
+                    "value": "dev"
+                },
+                "LocationCode": {
+                    "value": "neur"
+                },
+                "LocationFullName": {
+                    "value": "North Europe"
+                },
+                "LocationName": {
+                    "value": "northeurope"
+                },
+                "ProductionEnvironment": {
+                    "value": "prd"
+                },
+                "ProjectAbbreviation": {
+                    "value": "xyz123"
+                },
+                "ResourceSequence": {
+                    "value": "1"
+                },
+                "ServiceConnection": {
+                    "value": ""
+                },
+                "SubscriptionId": {
+                    "value": ""
+                },
+                "TestEnvironment": {
+                    "value": "pre"
+                },
+                "LinkedTemplatesContainer": {
+                    "value": "workspace"
+                }
+            },
+            "type": "Vsts",
+            "name": "ADFDevOpsDemoPipelineVariables",
+            "description": "",
+            "id": 1
+        }
+    ],
+    "properties": {},
+    "tags": [],
+    "jobAuthorizationScope": 2,
+    "jobTimeoutInMinutes": 60,
+    "jobCancelTimeoutInMinutes": 5,
+    "process": {
+        "phases": [
+            {
+                "steps": [
+                    {
+                        "environment": {},
+                        "enabled": true,
+                        "continueOnError": false,
+                        "alwaysRun": false,
+                        "displayName": "Publish Artifact: DataFactoryArmTemplates",
+                        "timeoutInMinutes": 0,
+                        "retryCountOnTaskFailure": 0,
+                        "condition": "succeeded()",
+                        "task": {
+                            "id": "2ff763a7-ce83-4e1f-bc89-0ae63477cebe",
+                            "versionSpec": "1.*",
+                            "definitionType": "task"
+                        },
+                        "inputs": {
+                            "PathtoPublish": "adf-$(ProjectAbbreviation)-$(DevelopmentEnvironment)-$(LocationCode)-$(ResourceSequence)",
+                            "ArtifactName": "DataFactoryArmTemplates",
+                            "ArtifactType": "Container",
+                            "TargetPath": "",
+                            "Parallel": "false",
+                            "ParallelCount": "8",
+                            "FileCopyOptions": "",
+                            "StoreAsTar": "false"
+                        }
+                    },
+                    {
+                        "environment": {},
+                        "enabled": true,
+                        "continueOnError": false,
+                        "alwaysRun": false,
+                        "displayName": "Copy Linked Templates to Data Lake Container",
+                        "timeoutInMinutes": 0,
+                        "retryCountOnTaskFailure": 0,
+                        "condition": "succeeded()",
+                        "task": {
+                            "id": "eb72cb01-a7e5-427b-a8a1-1b31ccac8a43",
+                            "versionSpec": "5.*",
+                            "definitionType": "task"
+                        },
+                        "inputs": {
+                            "SourcePath": "adf-$(ProjectAbbreviation)-$(DevelopmentEnvironment)-$(LocationCode)-$(ResourceSequence)/linkedTemplates",
+                            "Destination": "AzureBlob",
+                            "StorageAccountRM": "adls$(ProjectAbbreviation)$(DevelopmentEnvironment)$(LocationCode)$(ResourceSequence)",
+                            "ContainerName": "$(LinkedTemplatesContainer)",
+                            "BlobPrefix": "adf-$(ProjectAbbreviation)-$(DevelopmentEnvironment)-$(LocationCode)-$(ResourceSequence)",
+                            "EnvironmentNameRM": "",
+                            "ResourceFilteringMethod": "machineNames",
+                            "MachineNames": "",
+                            "vmsAdminUserName": "",
+                            "vmsAdminPassword": "",
+                            "TargetPath": "",
+                            "AdditionalArgumentsForBlobCopy": "",
+                            "AdditionalArgumentsForVMCopy": "",
+                            "sasTokenTimeOutInMinutes": "240",
+                            "enableCopyPrerequisites": "false",
+                            "CopyFilesInParallel": "true",
+                            "CleanTargetBeforeCopy": "false",
+                            "skipCACheck": "true"
+                        }
+                    }
+                ],
+                "name": "Build",
+                "refName": "Job_1",
+                "condition": "succeeded()",
+                "target": {
+                    "executionOptions": {
+                        "type": 0
+                    },
+                    "allowScriptsAuthAccessOption": false,
+                    "type": 1
+                },
+                "jobAuthorizationScope": 2
+            }
+        ],
+        "target": {
+            "agentSpecification": {
+                "identifier": "windows-2019"
+            }
+        },
+        "type": 1
+    },
+    "repository": {
+        "properties": {
+            "cleanOptions": "0",
+            "labelSources": "0",
+            "labelSourcesFormat": "$(build.buildNumber)",
+            "reportBuildStatus": "true",
+            "fetchDepth": "1",
+            "gitLfsSupport": "false",
+            "skipSyncSource": "false",
+            "checkoutNestedSubmodules": "false"
+        },
+        "id": "f77eba9a-b73d-46ad-beb5-a5a62b1a6e23",
+        "type": "TfsGit",
+        "name": "ADFDevOpsDemo",
+        "defaultBranch": "refs/heads/adf_publish",
+        "clean": "false",
+        "checkoutSubmodules": false
+    },
+    "processParameters": {},
+    "quality": 1,
+    "drafts": [],
+    "id": 5,
+    "name": "ADF01-AzureDataFactory-Build",
+    "uri": "vstfs:///Build/Definition/5",
+    "path": "\\03 - Azure Data Factory",
+    "type": 2,
+    "queueStatus": 0,
+    "revision": 12,
+    "createdDate": "2022-11-14T08:02:35.247Z",
+    "project": {
+        "id": "7facd5d4-0569-480d-a15a-d4c960dcc008",
+        "name": "ADFDevOpsDemo",
+        "state": 1,
+        "revision": 43,
+        "visibility": 0,
+        "lastUpdateTime": "2022-11-04T13:52:29.157Z"
+    }
+}

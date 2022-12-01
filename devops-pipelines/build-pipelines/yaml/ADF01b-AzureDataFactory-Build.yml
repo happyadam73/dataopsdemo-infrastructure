@@ -1,0 +1,45 @@
+trigger:
+  branches:
+    include:
+    - main
+variables:
+- group: ADFDevOpsDemoPipelineVariables
+stages:
+- stage: __default
+  jobs:
+  - job: Job
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: 6d15af64-176c-496d-b583-fd2ae21d4df4@1
+      inputs:
+        repository: self
+        persistCredentials: true
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '14.x'
+      displayName: 'Install Node.js'
+    - task: Npm@1
+      inputs:
+        command: 'install'
+        workingDir: '$(Build.Repository.LocalPath)/$(BuildFolder)'
+        verbose: true
+      displayName: 'Install npm package'
+    - task: Npm@1
+      inputs:
+        command: 'custom'
+        workingDir: '$(Build.Repository.LocalPath)/$(BuildFolder)'
+        customCommand: 'run build validate $(Build.Repository.LocalPath)/$(ADFRootFolder) /subscriptions/$(SubscriptionID)/resourceGroups/$(ResourceGroup)/providers/Microsoft.DataFactory/factories/$(DataFactoryName)'
+      displayName: 'Validate'
+    - task: Npm@1
+      inputs:
+        command: 'custom'
+        workingDir: '$(Build.Repository.LocalPath)/$(BuildFolder)'
+        customCommand: 'run build export $(Build.Repository.LocalPath)/$(ADFRootFolder) /subscriptions/$(SubscriptionID)/resourceGroups/$(ResourceGroup)/providers/Microsoft.DataFactory/factories/$(DataFactoryName) "$(ArmTemplateFolder)"'
+      displayName: 'Validate and Generate ARM template'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.Repository.LocalPath)/$(BuildFolder)/$(ArmTemplateFolder)'
+        artifact: 'ArmTemplates'
+        publishLocation: 'pipeline'
+

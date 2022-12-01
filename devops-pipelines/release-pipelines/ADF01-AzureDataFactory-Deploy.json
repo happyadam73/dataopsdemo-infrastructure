@@ -1,0 +1,820 @@
+{
+    "source": 2,
+    "revision": 15,
+    "description": null,
+    "createdOn": "2022-11-10T16:21:15.213Z",
+    "modifiedOn": "2022-11-11T15:18:21.970Z",
+    "isDeleted": false,
+    "variables": {
+        "FactoryName": {
+            "value": "adf-$(ResourceName)"
+        },
+        "KeyVault": {
+            "value": "kv$(ResourceNameAbbrev)"
+        },
+        "ResourceGroup": {
+            "value": "rg-$(ResourceName)"
+        },
+        "ResourceName": {
+            "value": "$(ProjectAbbreviation)-$(Environment)-$(LocationCode)-$(ResourceSequence)"
+        },
+        "ResourceNameAbbrev": {
+            "value": "$(ProjectAbbreviation)$(Environment)$(LocationCode)$(ResourceSequence)"
+        },
+        "SqlDatabase": {
+            "value": "sqldb-$(ResourceName)"
+        },
+        "SqlServer": {
+            "value": "sqlsvr-$(ResourceName).database.windows.net"
+        },
+        "StorageAccount": {
+            "value": "adls$(ResourceNameAbbrev)"
+        }
+    },
+    "variableGroups": [
+        1
+    ],
+    "environments": [
+        {
+            "id": 14,
+            "name": "Development",
+            "rank": 1,
+            "variables": {
+                "DailyETLStartHours": {
+                    "value": "2"
+                },
+                "DailyETLStartMinutes": {
+                    "value": "0"
+                },
+                "Environment": {
+                    "value": "dev"
+                }
+            },
+            "variableGroups": [],
+            "preDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 40
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 1
+                }
+            },
+            "deployStep": {
+                "id": 41
+            },
+            "postDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 42
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 2
+                }
+            },
+            "deployPhases": [
+                {
+                    "deploymentInput": {
+                        "parallelExecution": {
+                            "parallelExecutionType": 0
+                        },
+                        "agentSpecification": {
+                            "identifier": "windows-2019"
+                        },
+                        "skipArtifactsDownload": false,
+                        "artifactsDownloadInput": {
+                            "downloadInputs": []
+                        },
+                        "queueId": 45,
+                        "demands": [],
+                        "enableAccessToken": false,
+                        "timeoutInMinutes": 0,
+                        "jobCancelTimeoutInMinutes": 1,
+                        "condition": "succeeded()",
+                        "overrideInputs": {}
+                    },
+                    "rank": 1,
+                    "phaseType": 1,
+                    "name": "Agent job",
+                    "refName": null,
+                    "workflowTasks": [
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "5.*",
+                            "name": "Stop Triggers",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_adf_repo_main/scripts/StopAndStartPipelineTriggers.ps1",
+                                "Inline": "# You can write your azure powershell scripts inline here. \n# You can also pass predefined and custom variables to this script using arguments",
+                                "ScriptArguments": "-armTemplate \"$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateForFactory.json\" -ResourceGroupName $(ResourceGroup) -DataFactoryName $(FactoryName) -predeployment $true -deleteDeployment $false",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "true",
+                                "workingDirectory": ""
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "94a74903-f93f-4075-884f-dc11f34058b4",
+                            "version": "2.*",
+                            "name": "Deploy Data Factory Pipelines",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "action": "Create Or Update Resource Group",
+                                "resourceGroupName": "$(ResourceGroup)",
+                                "location": "$(LocationFullName)",
+                                "templateLocation": "Linked artifact",
+                                "csmFileLink": "",
+                                "csmParametersFileLink": "",
+                                "csmFile": "$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateForFactory.json",
+                                "csmParametersFile": "$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateParametersForFactory.json",
+                                "overrideParameters": "-factoryName $(FactoryName) -LS_ASQL_ADFDEMO_DW_connectionString \"Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=$(SqlServer);Initial Catalog=$(SqlDatabase)\" -LS_ADLS_ADFDEMO_DataLake_properties_typeProperties_url \"https://$(StorageAccount).dfs.core.windows.net/\" -LS_ADLS_ADFDEMO_DataLake_properties_typeProperties_accountKey_secretName \"$(StorageAccount)-key\" -LS_AKV_ADFDEMO_KeyVault_properties_typeProperties_baseUrl \"https://$(KeyVault).vault.azure.net/\" -LS_REST_FHRS_API_properties_typeProperties_url \"https://api.ratings.food.gov.uk/\" -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_frequency \"Day\" -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_interval 1 -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_startTime \"2020-08-01T12:00:00Z\" -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_schedule {\"minutes\": [$(DailyETLStartMinutes)], \"hours\": [$(DailyETLStartHours)]} -default_properties_environment_value \"$(Environment)\"",
+                                "deploymentMode": "Incremental",
+                                "enableDeploymentPrerequisites": "None",
+                                "deploymentGroupEndpoint": "",
+                                "project": "",
+                                "deploymentGroupName": "",
+                                "copyAzureVMTags": "true",
+                                "runAgentServiceAsUser": "false",
+                                "userName": "",
+                                "password": "",
+                                "outputVariable": "",
+                                "deploymentName": "",
+                                "deploymentOutputs": "",
+                                "addSpnToEnvironment": "false"
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "5.*",
+                            "name": "Start Triggers",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_adf_repo_main/scripts/StopAndStartPipelineTriggers.ps1",
+                                "Inline": "# You can write your azure powershell scripts inline here. \n# You can also pass predefined and custom variables to this script using arguments",
+                                "ScriptArguments": "-armTemplate \"$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateForFactory.json\" -ResourceGroupName $(ResourceGroup) -DataFactoryName $(FactoryName) -predeployment $false -deleteDeployment $true",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "true",
+                                "workingDirectory": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            "environmentOptions": {
+                "emailNotificationType": "OnlyOnFailure",
+                "emailRecipients": "release.environment.owner;release.creator",
+                "skipArtifactsDownload": false,
+                "timeoutInMinutes": 0,
+                "enableAccessToken": false,
+                "publishDeploymentStatus": true,
+                "badgeEnabled": true,
+                "autoLinkWorkItems": false,
+                "pullRequestDeploymentEnabled": false
+            },
+            "demands": [],
+            "conditions": [],
+            "executionPolicy": {
+                "concurrencyCount": 1,
+                "queueDepthCount": 0
+            },
+            "schedules": [],
+            "retentionPolicy": {
+                "daysToKeep": 30,
+                "releasesToKeep": 3,
+                "retainBuild": true
+            },
+            "processParameters": {},
+            "properties": {
+                "BoardsEnvironmentType": {
+                    "$type": "System.String",
+                    "$value": "testing"
+                },
+                "LinkBoardsWorkItems": {
+                    "$type": "System.String",
+                    "$value": "False"
+                }
+            },
+            "preDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "postDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "environmentTriggers": []
+        },
+        {
+            "id": 17,
+            "name": "Pre-Production",
+            "rank": 2,
+            "variables": {
+                "DailyETLStartHours": {
+                    "value": "2"
+                },
+                "DailyETLStartMinutes": {
+                    "value": "0"
+                },
+                "Environment": {
+                    "value": "pre"
+                }
+            },
+            "variableGroups": [],
+            "preDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 49
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 1
+                }
+            },
+            "deployStep": {
+                "id": 52
+            },
+            "postDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 53
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 2
+                }
+            },
+            "deployPhases": [
+                {
+                    "deploymentInput": {
+                        "parallelExecution": {
+                            "parallelExecutionType": 0
+                        },
+                        "agentSpecification": {
+                            "identifier": "windows-2019"
+                        },
+                        "skipArtifactsDownload": false,
+                        "artifactsDownloadInput": {
+                            "downloadInputs": []
+                        },
+                        "queueId": 45,
+                        "demands": [],
+                        "enableAccessToken": false,
+                        "timeoutInMinutes": 0,
+                        "jobCancelTimeoutInMinutes": 1,
+                        "condition": "succeeded()",
+                        "overrideInputs": {}
+                    },
+                    "rank": 1,
+                    "phaseType": 1,
+                    "name": "Agent job",
+                    "refName": null,
+                    "workflowTasks": [
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "5.*",
+                            "name": "Stop Triggers",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_adf_repo_main/scripts/StopAndStartPipelineTriggers.ps1",
+                                "Inline": "# You can write your azure powershell scripts inline here. \n# You can also pass predefined and custom variables to this script using arguments",
+                                "ScriptArguments": "-armTemplate \"$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateForFactory.json\" -ResourceGroupName $(ResourceGroup) -DataFactoryName $(FactoryName) -predeployment $true -deleteDeployment $false",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "true",
+                                "workingDirectory": ""
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "94a74903-f93f-4075-884f-dc11f34058b4",
+                            "version": "2.*",
+                            "name": "Deploy Data Factory Pipelines",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "action": "Create Or Update Resource Group",
+                                "resourceGroupName": "$(ResourceGroup)",
+                                "location": "$(LocationFullName)",
+                                "templateLocation": "Linked artifact",
+                                "csmFileLink": "",
+                                "csmParametersFileLink": "",
+                                "csmFile": "$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateForFactory.json",
+                                "csmParametersFile": "$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateParametersForFactory.json",
+                                "overrideParameters": "-factoryName $(FactoryName) -LS_ASQL_ADFDEMO_DW_connectionString \"Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=$(SqlServer);Initial Catalog=$(SqlDatabase)\" -LS_ADLS_ADFDEMO_DataLake_properties_typeProperties_url \"https://$(StorageAccount).dfs.core.windows.net/\" -LS_ADLS_ADFDEMO_DataLake_properties_typeProperties_accountKey_secretName \"$(StorageAccount)-key\" -LS_AKV_ADFDEMO_KeyVault_properties_typeProperties_baseUrl \"https://$(KeyVault).vault.azure.net/\" -LS_REST_FHRS_API_properties_typeProperties_url \"https://api.ratings.food.gov.uk/\" -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_frequency \"Day\" -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_interval 1 -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_startTime \"2020-08-01T12:00:00Z\" -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_schedule {\"minutes\": [$(DailyETLStartMinutes)], \"hours\": [$(DailyETLStartHours)]} -default_properties_environment_value \"$(Environment)\"",
+                                "deploymentMode": "Incremental",
+                                "enableDeploymentPrerequisites": "None",
+                                "deploymentGroupEndpoint": "",
+                                "project": "",
+                                "deploymentGroupName": "",
+                                "copyAzureVMTags": "true",
+                                "runAgentServiceAsUser": "false",
+                                "userName": "",
+                                "password": "",
+                                "outputVariable": "",
+                                "deploymentName": "",
+                                "deploymentOutputs": "",
+                                "addSpnToEnvironment": "false"
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "5.*",
+                            "name": "Start Triggers",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_adf_repo_main/scripts/StopAndStartPipelineTriggers.ps1",
+                                "Inline": "# You can write your azure powershell scripts inline here. \n# You can also pass predefined and custom variables to this script using arguments",
+                                "ScriptArguments": "-armTemplate \"$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateForFactory.json\" -ResourceGroupName $(ResourceGroup) -DataFactoryName $(FactoryName) -predeployment $false -deleteDeployment $true",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "true",
+                                "workingDirectory": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            "environmentOptions": {
+                "emailNotificationType": "OnlyOnFailure",
+                "emailRecipients": "release.environment.owner;release.creator",
+                "skipArtifactsDownload": false,
+                "timeoutInMinutes": 0,
+                "enableAccessToken": false,
+                "publishDeploymentStatus": true,
+                "badgeEnabled": true,
+                "autoLinkWorkItems": false,
+                "pullRequestDeploymentEnabled": false
+            },
+            "demands": [],
+            "conditions": [],
+            "executionPolicy": {
+                "concurrencyCount": 1,
+                "queueDepthCount": 0
+            },
+            "schedules": [],
+            "retentionPolicy": {
+                "daysToKeep": 30,
+                "releasesToKeep": 3,
+                "retainBuild": true
+            },
+            "processParameters": {},
+            "properties": {
+                "BoardsEnvironmentType": {
+                    "$type": "System.String",
+                    "$value": "unmapped"
+                },
+                "LinkBoardsWorkItems": {
+                    "$type": "System.String",
+                    "$value": "False"
+                }
+            },
+            "preDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "postDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "environmentTriggers": []
+        },
+        {
+            "id": 18,
+            "name": "Production",
+            "rank": 3,
+            "variables": {
+                "DailyETLStartHours": {
+                    "value": "2"
+                },
+                "DailyETLStartMinutes": {
+                    "value": "0"
+                },
+                "Environment": {
+                    "value": "prd"
+                }
+            },
+            "variableGroups": [],
+            "preDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 50
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 1
+                }
+            },
+            "deployStep": {
+                "id": 51
+            },
+            "postDeployApprovals": {
+                "approvals": [
+                    {
+                        "rank": 1,
+                        "isAutomated": true,
+                        "isNotificationOn": false,
+                        "id": 54
+                    }
+                ],
+                "approvalOptions": {
+                    "requiredApproverCount": null,
+                    "releaseCreatorCanBeApprover": false,
+                    "autoTriggeredAndPreviousEnvironmentApprovedCanBeSkipped": false,
+                    "enforceIdentityRevalidation": false,
+                    "timeoutInMinutes": 0,
+                    "executionOrder": 2
+                }
+            },
+            "deployPhases": [
+                {
+                    "deploymentInput": {
+                        "parallelExecution": {
+                            "parallelExecutionType": 0
+                        },
+                        "agentSpecification": {
+                            "identifier": "windows-2019"
+                        },
+                        "skipArtifactsDownload": false,
+                        "artifactsDownloadInput": {
+                            "downloadInputs": []
+                        },
+                        "queueId": 45,
+                        "demands": [],
+                        "enableAccessToken": false,
+                        "timeoutInMinutes": 0,
+                        "jobCancelTimeoutInMinutes": 1,
+                        "condition": "succeeded()",
+                        "overrideInputs": {}
+                    },
+                    "rank": 1,
+                    "phaseType": 1,
+                    "name": "Agent job",
+                    "refName": null,
+                    "workflowTasks": [
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "5.*",
+                            "name": "Stop Triggers",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_adf_repo_main/scripts/StopAndStartPipelineTriggers.ps1",
+                                "Inline": "# You can write your azure powershell scripts inline here. \n# You can also pass predefined and custom variables to this script using arguments",
+                                "ScriptArguments": "-armTemplate \"$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateForFactory.json\" -ResourceGroupName $(ResourceGroup) -DataFactoryName $(FactoryName) -predeployment $true -deleteDeployment $false",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "true",
+                                "workingDirectory": ""
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "94a74903-f93f-4075-884f-dc11f34058b4",
+                            "version": "2.*",
+                            "name": "Deploy Data Factory Pipelines",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "action": "Create Or Update Resource Group",
+                                "resourceGroupName": "$(ResourceGroup)",
+                                "location": "$(LocationFullName)",
+                                "templateLocation": "Linked artifact",
+                                "csmFileLink": "",
+                                "csmParametersFileLink": "",
+                                "csmFile": "$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateForFactory.json",
+                                "csmParametersFile": "$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateParametersForFactory.json",
+                                "overrideParameters": "-factoryName $(FactoryName) -LS_ASQL_ADFDEMO_DW_connectionString \"Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=$(SqlServer);Initial Catalog=$(SqlDatabase)\" -LS_ADLS_ADFDEMO_DataLake_properties_typeProperties_url \"https://$(StorageAccount).dfs.core.windows.net/\" -LS_ADLS_ADFDEMO_DataLake_properties_typeProperties_accountKey_secretName \"$(StorageAccount)-key\" -LS_AKV_ADFDEMO_KeyVault_properties_typeProperties_baseUrl \"https://$(KeyVault).vault.azure.net/\" -LS_REST_FHRS_API_properties_typeProperties_url \"https://api.ratings.food.gov.uk/\" -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_frequency \"Day\" -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_interval 1 -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_startTime \"2020-08-01T12:00:00Z\" -TRG_SCHD_ADFDEMO_Full_Data_Warehouse_Load_schedule {\"minutes\": [$(DailyETLStartMinutes)], \"hours\": [$(DailyETLStartHours)]} -default_properties_environment_value \"$(Environment)\"",
+                                "deploymentMode": "Incremental",
+                                "enableDeploymentPrerequisites": "None",
+                                "deploymentGroupEndpoint": "",
+                                "project": "",
+                                "deploymentGroupName": "",
+                                "copyAzureVMTags": "true",
+                                "runAgentServiceAsUser": "false",
+                                "userName": "",
+                                "password": "",
+                                "outputVariable": "",
+                                "deploymentName": "",
+                                "deploymentOutputs": "",
+                                "addSpnToEnvironment": "false"
+                            }
+                        },
+                        {
+                            "environment": {},
+                            "taskId": "72a1931b-effb-4d2e-8fd8-f8472a07cb62",
+                            "version": "5.*",
+                            "name": "Start Triggers",
+                            "refName": "",
+                            "enabled": true,
+                            "alwaysRun": false,
+                            "continueOnError": false,
+                            "timeoutInMinutes": 0,
+                            "retryCountOnTaskFailure": 0,
+                            "definitionType": "task",
+                            "overrideInputs": {},
+                            "condition": "succeeded()",
+                            "inputs": {
+                                "ScriptType": "FilePath",
+                                "ScriptPath": "$(System.DefaultWorkingDirectory)/_adf_repo_main/scripts/StopAndStartPipelineTriggers.ps1",
+                                "Inline": "# You can write your azure powershell scripts inline here. \n# You can also pass predefined and custom variables to this script using arguments",
+                                "ScriptArguments": "-armTemplate \"$(System.DefaultWorkingDirectory)/_adf_build/DataFactoryArmTemplates/ARMTemplateForFactory.json\" -ResourceGroupName $(ResourceGroup) -DataFactoryName $(FactoryName) -predeployment $false -deleteDeployment $true",
+                                "errorActionPreference": "stop",
+                                "FailOnStandardError": "false",
+                                "TargetAzurePs": "LatestVersion",
+                                "CustomTargetAzurePs": "",
+                                "pwsh": "true",
+                                "workingDirectory": ""
+                            }
+                        }
+                    ]
+                }
+            ],
+            "environmentOptions": {
+                "emailNotificationType": "OnlyOnFailure",
+                "emailRecipients": "release.environment.owner;release.creator",
+                "skipArtifactsDownload": false,
+                "timeoutInMinutes": 0,
+                "enableAccessToken": false,
+                "publishDeploymentStatus": true,
+                "badgeEnabled": true,
+                "autoLinkWorkItems": false,
+                "pullRequestDeploymentEnabled": false
+            },
+            "demands": [],
+            "conditions": [],
+            "executionPolicy": {
+                "concurrencyCount": 1,
+                "queueDepthCount": 0
+            },
+            "schedules": [],
+            "retentionPolicy": {
+                "daysToKeep": 30,
+                "releasesToKeep": 3,
+                "retainBuild": true
+            },
+            "processParameters": {},
+            "properties": {
+                "BoardsEnvironmentType": {
+                    "$type": "System.String",
+                    "$value": "production"
+                },
+                "LinkBoardsWorkItems": {
+                    "$type": "System.String",
+                    "$value": "False"
+                }
+            },
+            "preDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "postDeploymentGates": {
+                "id": 0,
+                "gatesOptions": null,
+                "gates": []
+            },
+            "environmentTriggers": []
+        }
+    ],
+    "artifacts": [
+        {
+            "sourceId": "7facd5d4-0569-480d-a15a-d4c960dcc008:5",
+            "type": "Build",
+            "alias": "_adf_build",
+            "definitionReference": {
+                "defaultVersionBranch": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionSpecific": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionTags": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionType": {
+                    "id": "latestType",
+                    "name": "Latest"
+                },
+                "definition": {
+                    "id": "5",
+                    "name": "ADF01-AzureDataFactory-Build"
+                },
+                "definitions": {
+                    "id": "",
+                    "name": ""
+                },
+                "IsMultiDefinitionType": {
+                    "id": "False",
+                    "name": "False"
+                },
+                "project": {
+                    "id": "7facd5d4-0569-480d-a15a-d4c960dcc008",
+                    "name": "ADFDevOpsDemo"
+                },
+                "repository": {
+                    "id": "",
+                    "name": ""
+                }
+            },
+            "isPrimary": true,
+            "isRetained": false
+        },
+        {
+            "sourceId": "7facd5d4-0569-480d-a15a-d4c960dcc008:f77eba9a-b73d-46ad-beb5-a5a62b1a6e23",
+            "type": "Git",
+            "alias": "_adf_repo_main",
+            "definitionReference": {
+                "branches": {
+                    "id": "main",
+                    "name": "main"
+                },
+                "checkoutNestedSubmodules": {
+                    "id": "True",
+                    "name": "Any nested submodules within"
+                },
+                "checkoutSubmodules": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionSpecific": {
+                    "id": "",
+                    "name": ""
+                },
+                "defaultVersionType": {
+                    "id": "latestFromBranchType",
+                    "name": "Latest from the default branch"
+                },
+                "definition": {
+                    "id": "f77eba9a-b73d-46ad-beb5-a5a62b1a6e23",
+                    "name": "ADFDevOpsDemo"
+                },
+                "fetchDepth": {
+                    "id": "",
+                    "name": ""
+                },
+                "gitLfsSupport": {
+                    "id": "",
+                    "name": ""
+                },
+                "project": {
+                    "id": "7facd5d4-0569-480d-a15a-d4c960dcc008",
+                    "name": "ADFDevOpsDemo"
+                }
+            },
+            "isRetained": false
+        }
+    ],
+    "triggers": [],
+    "releaseNameFormat": "$(Release.DefinitionName) (Release $(Rev:rrr), Build $(Build.BuildNumber))",
+    "tags": [],
+    "properties": {
+        "DefinitionCreationSource": {
+            "$type": "System.String",
+            "$value": "ReleaseImport"
+        },
+        "IntegrateBoardsWorkItems": {
+            "$type": "System.String",
+            "$value": "False"
+        },
+        "IntegrateJiraWorkItems": {
+            "$type": "System.String",
+            "$value": "false"
+        }
+    },
+    "id": 6,
+    "name": "ADF01-AzureDataFactory-Deploy",
+    "path": "\\03 - Data Factory",
+    "projectReference": null
+}

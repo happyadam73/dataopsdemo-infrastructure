@@ -1,0 +1,340 @@
+{
+    "options": [
+        {
+            "enabled": false,
+            "definition": {
+                "id": "5d58cc01-7c75-450c-be18-a388ddb129ec"
+            },
+            "inputs": {
+                "branchFilters": "[\"+refs/heads/*\"]",
+                "additionalFields": "{}"
+            }
+        },
+        {
+            "enabled": false,
+            "definition": {
+                "id": "a9db38f9-9fdc-478c-b0f9-464221e58316"
+            },
+            "inputs": {
+                "workItemType": "Issue",
+                "assignToRequestor": "true",
+                "additionalFields": "{}"
+            }
+        }
+    ],
+    "triggers": [
+        {
+            "branchFilters": [
+                "+refs/heads/main"
+            ],
+            "pathFilters": [],
+            "batchChanges": false,
+            "maxConcurrentBuildsPerBranch": 1,
+            "pollingInterval": 0,
+            "triggerType": 2
+        }
+    ],
+    "variables": {
+        "system.debug": {
+            "value": "false",
+            "allowOverride": true
+        }
+    },
+    "variableGroups": [
+        {
+            "variables": {
+                "DevelopmentEnvironment": {
+                    "value": "dev"
+                },
+                "LocationCode": {
+                    "value": "neur"
+                },
+                "LocationFullName": {
+                    "value": "North Europe"
+                },
+                "LocationName": {
+                    "value": "northeurope"
+                },
+                "ProductionEnvironment": {
+                    "value": "prd"
+                },
+                "ProjectAbbreviation": {
+                    "value": "xyz123"
+                },
+                "ResourceSequence": {
+                    "value": "1"
+                },
+                "TestEnvironment": {
+                    "value": "pre"
+                },
+                "SubscriptionId": {
+                    "value": ""
+                }
+            },
+            "type": "Vsts",
+            "name": "ADFDevOpsDemoPipelineVariables",
+            "description": "",
+            "id": 1
+        }
+    ],
+    "properties": {},
+    "tags": [],
+    "jobAuthorizationScope": 2,
+    "jobTimeoutInMinutes": 60,
+    "jobCancelTimeoutInMinutes": 5,
+    "process": {
+        "phases": [
+            {
+                "steps": [
+                    {
+                        "environment": {},
+                        "enabled": true,
+                        "continueOnError": false,
+                        "alwaysRun": false,
+                        "displayName": "Create Development Resource Group",
+                        "timeoutInMinutes": 0,
+                        "retryCountOnTaskFailure": 0,
+                        "condition": "succeeded()",
+                        "task": {
+                            "id": "46e4be58-730b-4389-8a2f-ea10b3e5e815",
+                            "versionSpec": "2.*",
+                            "definitionType": "task"
+                        },
+                        "inputs": {
+                            "scriptType": "bash",
+                            "scriptLocation": "inlineScript",
+                            "scriptPath": "",
+                            "inlineScript": "if [ $(az group exists --name rg-$(ProjectAbbreviation)-$(DevelopmentEnvironment)-$(LocationCode)-$(ResourceSequence)) = false ]; then\n    az group create --name rg-$(ProjectAbbreviation)-$(DevelopmentEnvironment)-$(LocationCode)-$(ResourceSequence) --location $(LocationName)\nfi\n\n",
+                            "scriptArguments": "",
+                            "powerShellErrorActionPreference": "stop",
+                            "addSpnToEnvironment": "false",
+                            "useGlobalConfig": "false",
+                            "cwd": "",
+                            "failOnStandardError": "false",
+                            "powerShellIgnoreLASTEXITCODE": "false"
+                        }
+                    },
+                    {
+                        "environment": {},
+                        "enabled": true,
+                        "continueOnError": false,
+                        "alwaysRun": false,
+                        "displayName": "Create Pre-Production Resource Group",
+                        "timeoutInMinutes": 0,
+                        "retryCountOnTaskFailure": 0,
+                        "condition": "succeeded()",
+                        "task": {
+                            "id": "46e4be58-730b-4389-8a2f-ea10b3e5e815",
+                            "versionSpec": "2.*",
+                            "definitionType": "task"
+                        },
+                        "inputs": {
+                            "scriptType": "bash",
+                            "scriptLocation": "inlineScript",
+                            "scriptPath": "",
+                            "inlineScript": "if [ $(az group exists --name rg-$(ProjectAbbreviation)-$(TestEnvironment)-$(LocationCode)-$(ResourceSequence)) = false ]; then\n    az group create --name rg-$(ProjectAbbreviation)-$(TestEnvironment)-$(LocationCode)-$(ResourceSequence) --location $(LocationName)\nfi\n\n",
+                            "scriptArguments": "",
+                            "powerShellErrorActionPreference": "stop",
+                            "addSpnToEnvironment": "false",
+                            "useGlobalConfig": "false",
+                            "cwd": "",
+                            "failOnStandardError": "false",
+                            "powerShellIgnoreLASTEXITCODE": "false"
+                        }
+                    },
+                    {
+                        "environment": {},
+                        "enabled": true,
+                        "continueOnError": false,
+                        "alwaysRun": false,
+                        "displayName": "Create Production Resource Group",
+                        "timeoutInMinutes": 0,
+                        "retryCountOnTaskFailure": 0,
+                        "condition": "succeeded()",
+                        "task": {
+                            "id": "46e4be58-730b-4389-8a2f-ea10b3e5e815",
+                            "versionSpec": "2.*",
+                            "definitionType": "task"
+                        },
+                        "inputs": {
+                            "scriptType": "bash",
+                            "scriptLocation": "inlineScript",
+                            "scriptPath": "",
+                            "inlineScript": "if [ $(az group exists --name rg-$(ProjectAbbreviation)-$(ProductionEnvironment)-$(LocationCode)-$(ResourceSequence)) = false ]; then\n    az group create --name rg-$(ProjectAbbreviation)-$(ProductionEnvironment)-$(LocationCode)-$(ResourceSequence) --location $(LocationName)\nfi\n\n",
+                            "scriptArguments": "",
+                            "powerShellErrorActionPreference": "stop",
+                            "addSpnToEnvironment": "false",
+                            "useGlobalConfig": "false",
+                            "cwd": "",
+                            "failOnStandardError": "false",
+                            "powerShellIgnoreLASTEXITCODE": "false"
+                        }
+                    },
+                    {
+                        "environment": {},
+                        "enabled": true,
+                        "continueOnError": false,
+                        "alwaysRun": false,
+                        "displayName": "Validate Bicep Templates (Development)",
+                        "timeoutInMinutes": 0,
+                        "retryCountOnTaskFailure": 0,
+                        "condition": "succeeded()",
+                        "task": {
+                            "id": "46e4be58-730b-4389-8a2f-ea10b3e5e815",
+                            "versionSpec": "2.*",
+                            "definitionType": "task"
+                        },
+                        "inputs": {
+                            "scriptType": "bash",
+                            "scriptLocation": "inlineScript",
+                            "scriptPath": "",
+                            "inlineScript": "az deployment group validate --resource-group rg-$(ProjectAbbreviation)-$(DevelopmentEnvironment)-$(LocationCode)-$(ResourceSequence) --template-file templates/main.bicep --parameters templates/params.$(DevelopmentEnvironment).json",
+                            "scriptArguments": "",
+                            "powerShellErrorActionPreference": "stop",
+                            "addSpnToEnvironment": "false",
+                            "useGlobalConfig": "false",
+                            "cwd": "",
+                            "failOnStandardError": "true",
+                            "powerShellIgnoreLASTEXITCODE": "false"
+                        }
+                    },
+                    {
+                        "environment": {},
+                        "enabled": true,
+                        "continueOnError": false,
+                        "alwaysRun": false,
+                        "displayName": "Validate Bicep Templates (Pre-Production)",
+                        "timeoutInMinutes": 0,
+                        "retryCountOnTaskFailure": 0,
+                        "condition": "succeeded()",
+                        "task": {
+                            "id": "46e4be58-730b-4389-8a2f-ea10b3e5e815",
+                            "versionSpec": "2.*",
+                            "definitionType": "task"
+                        },
+                        "inputs": {
+                            "scriptType": "bash",
+                            "scriptLocation": "inlineScript",
+                            "scriptPath": "",
+                            "inlineScript": "az deployment group validate --resource-group rg-$(ProjectAbbreviation)-$(TestEnvironment)-$(LocationCode)-$(ResourceSequence) --template-file templates/main.bicep --parameters templates/params.$(TestEnvironment).json",
+                            "scriptArguments": "",
+                            "powerShellErrorActionPreference": "stop",
+                            "addSpnToEnvironment": "false",
+                            "useGlobalConfig": "false",
+                            "cwd": "",
+                            "failOnStandardError": "true",
+                            "powerShellIgnoreLASTEXITCODE": "false"
+                        }
+                    },
+                    {
+                        "environment": {},
+                        "enabled": true,
+                        "continueOnError": false,
+                        "alwaysRun": false,
+                        "displayName": "Validate Bicep Templates (Production)",
+                        "timeoutInMinutes": 0,
+                        "retryCountOnTaskFailure": 0,
+                        "condition": "succeeded()",
+                        "task": {
+                            "id": "46e4be58-730b-4389-8a2f-ea10b3e5e815",
+                            "versionSpec": "2.*",
+                            "definitionType": "task"
+                        },
+                        "inputs": {
+                            "scriptType": "bash",
+                            "scriptLocation": "inlineScript",
+                            "scriptPath": "",
+                            "inlineScript": "az deployment group validate --resource-group rg-$(ProjectAbbreviation)-$(ProductionEnvironment)-$(LocationCode)-$(ResourceSequence) --template-file templates/main.bicep --parameters templates/params.$(ProductionEnvironment).json",
+                            "scriptArguments": "",
+                            "powerShellErrorActionPreference": "stop",
+                            "addSpnToEnvironment": "false",
+                            "useGlobalConfig": "false",
+                            "cwd": "",
+                            "failOnStandardError": "true",
+                            "powerShellIgnoreLASTEXITCODE": "false"
+                        }
+                    },
+                    {
+                        "environment": {},
+                        "enabled": true,
+                        "continueOnError": false,
+                        "alwaysRun": false,
+                        "displayName": "Publish Artifact: BicepTemplates",
+                        "timeoutInMinutes": 0,
+                        "retryCountOnTaskFailure": 0,
+                        "condition": "succeeded()",
+                        "task": {
+                            "id": "2ff763a7-ce83-4e1f-bc89-0ae63477cebe",
+                            "versionSpec": "1.*",
+                            "definitionType": "task"
+                        },
+                        "inputs": {
+                            "PathtoPublish": "templates",
+                            "ArtifactName": "BicepTemplates",
+                            "ArtifactType": "Container",
+                            "TargetPath": "",
+                            "Parallel": "false",
+                            "ParallelCount": "8",
+                            "FileCopyOptions": "",
+                            "StoreAsTar": "false"
+                        }
+                    }
+                ],
+                "name": "Build",
+                "refName": "Job_1",
+                "condition": "succeeded()",
+                "target": {
+                    "executionOptions": {
+                        "type": 0
+                    },
+                    "allowScriptsAuthAccessOption": false,
+                    "type": 1
+                },
+                "jobAuthorizationScope": 2
+            }
+        ],
+        "target": {
+            "agentSpecification": {
+                "identifier": "windows-2019"
+            }
+        },
+        "type": 1
+    },
+    "repository": {
+        "properties": {
+            "cleanOptions": "0",
+            "labelSources": "0",
+            "labelSourcesFormat": "$(build.buildNumber)",
+            "reportBuildStatus": "true",
+            "fetchDepth": "1",
+            "gitLfsSupport": "false",
+            "skipSyncSource": "false",
+            "checkoutNestedSubmodules": "false"
+        },
+        "id": "bed3ec12-f0b3-4cd4-a253-5e01317c5c45",
+        "type": "TfsGit",
+        "name": "InfraDevOpsDemo",
+        "defaultBranch": "refs/heads/main",
+        "clean": "false",
+        "checkoutSubmodules": false
+    },
+    "processParameters": {},
+    "quality": 1,
+    "drafts": [],
+    "id": 4,
+    "name": "INF01-AzureInfrastructure-Build",
+    "uri": "vstfs:///Build/Definition/4",
+    "path": "\\01 - Infrastructure",
+    "type": 2,
+    "queueStatus": 0,
+    "revision": 11,
+    "createdDate": "2022-11-09T18:07:37.597Z",
+    "project": {
+        "id": "7facd5d4-0569-480d-a15a-d4c960dcc008",
+        "name": "ADFDevOpsDemo",
+        "state": 1,
+        "revision": 43,
+        "visibility": 0,
+        "lastUpdateTime": "2022-11-04T13:52:29.157Z"
+    }
+}
